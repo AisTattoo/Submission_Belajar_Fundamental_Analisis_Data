@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import streamlit as st
 from babel.numbers import format_currency
+import os
 
 # Set style seaborn
 sns.set(style='dark')
@@ -23,8 +24,8 @@ def create_byseason_df(df):
     return byseason_df
 
 # Load cleaned data
-all_df = pd.read_csv("main_data.csv")
-all_df['dteday'] = pd.to_datetime(all_df['dteday'])
+current_dir = os.path.dirname(os.path.realpath(__file__))
+all_df = pd.read_csv(os.path.join(current_dir, "main_data.csv"))
 
 # Filter Rentang Waktu
 min_date = all_df["dteday"].min()
