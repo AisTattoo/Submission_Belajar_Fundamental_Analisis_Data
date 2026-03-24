@@ -24,7 +24,7 @@ def create_byseason_df(df):
     return byseason_df
 
 # Load cleaned data
-all_df = pd.read_csv("main_data.csv")
+all_df = pd.read_csv("dashboard/main_data.csv")
 all_df['dteday'] = pd.to_datetime(all_df['dteday'])
 
 # Filter Rentang Waktu
