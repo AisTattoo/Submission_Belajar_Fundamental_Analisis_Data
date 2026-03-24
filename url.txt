@@ -1,0 +1,2 @@
+app : https://adilmubarakbfda.streamlit.app/
+github : https://github.com/AisTattoo/Submission_Belajar_Fundamental_Analisis_Data.git
