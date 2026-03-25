@@ -23,5 +23,22 @@ Untuk menjalankan dashboard secara lokal, ikuti langkah-langkah berikut:
 ### 1. Clone Repositori
 Buka terminal/command prompt, lalu jalankan:
 ```bash
-git clone [https://github.com/username-anda/bike-sharing-analysis.git](https://github.com/username-anda/bike-sharing-analysis.git)
+git clone [https://github.com/username-anda/Submission_Belajar_Fundamental_Analisis_Data.git](https://github.com/username-anda/Submission_Belajar_Fundamental_Analisis_Data.git)
 cd bike-sharing-analysis
+```
+### 2. Setup Virtual Environtment
+- Menggunakan Anaconda
+```bash
+conda create --name main-ds python=3.11
+conda activate main-ds
+pip install -r requirements.txt
+```
+- Menggunakan venv (bawaan python)
+```bash
+python -m venv venv
+```
+### 3. Menjalankan Dashboard Streamlit
+```bash
+cd dashboard
+streamlit run dashboard.py
+```
