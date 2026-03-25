@@ -40,5 +40,5 @@ python -m venv venv
 ### 3. Menjalankan Dashboard Streamlit
 ```bash
 cd dashboard
-streamlit run dashboard.py
+streamlit run dashboard\dashboard.py
 ```
