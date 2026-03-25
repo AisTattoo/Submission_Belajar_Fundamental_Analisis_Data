@@ -1,24 +1,27 @@
-# Bike Sharing Analysis Project 🚲
+# Bike Sharing Data Analysis Dashboard 🚲
 
 ## Project Overview
-Proyek ini merupakan analisis data dari dataset **Bike Sharing** untuk mengidentifikasi tren penyewaan sepeda berdasarkan parameter waktu (jam, hari, bulan, tahun) serta kondisi lingkungan (cuaca dan musim). Hasil analisis ini kemudian disajikan dalam bentuk dashboard interaktif menggunakan Streamlit.
+Proyek ini merupakan analisis data dari dataset **Bike Sharing** untuk mengidentifikasi tren penyewaan sepeda berdasarkan parameter waktu (jam, bulan, tahun), kondisi lingkungan (cuaca dan musim), serta menganalisis tingkat permintaan harian (Demand Category). Hasil analisis ini kemudian disajikan dalam bentuk dashboard interaktif menggunakan Streamlit.
+
+## Project Analysis Questions
+1. Bagaimana tren jumlah total penyewaan sepeda dari bulan ke bulan pada tahun 2012 dibandingkan dengan tahun 2011?
+2. Pada musim apa penyewaan sepeda mencapai angka tertinggi dan terendah selama periode pengamatan (2011-2012)?
+3. Bagaimana perbandingan pola rata-rata penyewaan sepeda per jam antara hari kerja (*working day*) dan hari libur (*holiday/weekend*) selama tahun 2011-2012?
 
 ## File Structure
 - `dashboard/`: Berisi file dashboard utama (`dashboard.py`) dan dataset hasil pembersihan (`main_data.csv`).
 - `data/`: Berisi dataset mentah (`day.csv` dan `hour.csv`).
-- `notebook.ipynb`: Dokumentasi lengkap proses Data Wrangling, EDA, hingga Visualisasi.
-- `requirements.txt`: Daftar library yang dibutuhkan untuk menjalankan proyek.
-- `url.txt`: Tautan menuju dashboard yang sudah dideploy.
+- `Proyek_Analisis_Data.ipynb`: Dokumentasi lengkap proses Data Wrangling, Exploratory Data Analysis (EDA), Analisis Lanjutan (Binning), hingga Visualisasi.
+- `requirements.txt`: Daftar versi *library* yang dibutuhkan untuk menjalankan proyek.
+- `url.txt`: Tautan menuju dashboard yang sudah di-*deploy* ke Streamlit Cloud.
+- `README.md`: Informasi lengkap mengenai proyek dan cara menjalankan *dashboard*.
+- `runtime.txt` : Informasi runtime menggunakan python versi 3.10
 
-## Project Analysis Questions
-1. Bagaimana pengaruh musim dan kondisi cuaca terhadap rata-rata jumlah penyewaan sepeda harian?
-2. Bagaimana tren pertumbuhan penyewaan sepeda dari tahun 2011 ke 2012 dan bagaimana pola distribusinya pada hari kerja vs hari libur?
-3. Bagaimana pola penggunaan sepeda per jam pada hari kerja dibandingkan dengan hari libur/akhir pekan?
+## Setup Environment & Installation
+Untuk menjalankan dashboard secara lokal, ikuti langkah-langkah berikut:
 
-## Installation
-Untuk menjalankan dashboard secara lokal, ikuti langkah berikut:
-
-1. **Clone repositori ini:**
-   ```bash
-   git clone [https://github.com/username-anda/bike-sharing-analysis.git](https://github.com/username-anda/bike-sharing-analysis.git)
-   cd bike-sharing-analysis
+### 1. Clone Repositori
+Buka terminal/command prompt, lalu jalankan:
+```bash
+git clone [https://github.com/username-anda/bike-sharing-analysis.git](https://github.com/username-anda/bike-sharing-analysis.git)
+cd bike-sharing-analysis
