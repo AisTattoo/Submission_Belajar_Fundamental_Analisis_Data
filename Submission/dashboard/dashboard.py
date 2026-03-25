@@ -2,109 +2,208 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import streamlit as st
-from babel.numbers import format_currency
-import os
 
-# Set style seaborn
-sns.set(style='dark')
+sns.set(style='darkgrid')
 
-# Helper function untuk menyiapkan berbagai dataframe
+# --- Helper Functions ---
 def create_daily_rent_df(df):
-    daily_rent_df = df.resample(rule='D', on='dteday').agg({
-        "cnt": "sum"
-    }).reset_index()
-    return daily_rent_df
-
-def create_sum_order_items_df(df):
-    sum_order_items_df = df.groupby("weathersit").cnt.sum().sort_values(ascending=False).reset_index()
-    return sum_order_items_df
+    return df.resample(rule='D', on='dteday').agg({"cnt": "sum"}).reset_index()
 
 def create_byseason_df(df):
-    byseason_df = df.groupby(by="season").cnt.sum().reset_index()
-    return byseason_df
+    season_map = {1: "Spring", 2: "Summer", 3: "Fall", 4: "Winter"}
+    
+    df = df.copy()
+    if df['season'].dtype != 'object':  
+        df['season_label'] = df['season'].map(season_map)
+    else:
+        df['season_label'] = df['season']
+    
+    return df.groupby("season_label")["cnt"].mean().reset_index()
 
-# Load cleaned data
-all_df = pd.read_csv("dashboard/main_data.csv")
-all_df['dteday'] = pd.to_datetime(all_df['dteday'])
+def create_byweather_df(df):
+    weather_map = {
+        1: "Clear/Partly Cloudy",
+        2: "Misty/Cloudy",
+        3: "Light Snow/Rain",
+        4: "Heavy Rain/Snow"
+    }
 
-# Filter Rentang Waktu
-min_date = all_df["dteday"].min()
-max_date = all_df["dteday"].max()
+    df = df.copy()
+    if df['weathersit'].dtype != 'object':
+        df['weather_label'] = df['weathersit'].map(weather_map)
+    else:
+        df['weather_label'] = df['weathersit']
+
+    return df.groupby("weather_label")["cnt"].mean().reset_index()
+
+def create_hourly_pattern_df(df):
+    return df.groupby(["hr", "workingday"])["cnt"].mean().reset_index()
+
+# --- Load Data ---
+main_df_raw = pd.read_csv("dashboard/main_data.csv")
+main_df_raw['dteday'] = pd.to_datetime(main_df_raw['dteday'])
+
+hour_df_raw = pd.read_csv("data/hour.csv")
+hour_df_raw['dteday'] = pd.to_datetime(hour_df_raw['dteday'])
+
+# --- Sidebar ---
+min_date = main_df_raw["dteday"].min()
+max_date = main_df_raw["dteday"].max()
 
 with st.sidebar:
-    st.image("https://github.com/dicodingacademy/assets/raw/main/logo.png")
-    
-    # Mengambil start_date & end_date dari date_input
+    st.title("🚲 Bike Sharing Dashboard")
     start_date, end_date = st.date_input(
-        label='Rentang Waktu',min_value=min_date,
+        "Rentang Waktu",
+        min_value=min_date,
         max_value=max_date,
         value=[min_date, max_date]
     )
 
-main_df = all_df[(all_df["dteday"] >= str(start_date)) & 
-                (all_df["dteday"] <= str(end_date))]
+# Filter
+main_df = main_df_raw[
+    (main_df_raw["dteday"] >= pd.to_datetime(start_date)) &
+    (main_df_raw["dteday"] <= pd.to_datetime(end_date))
+]
 
-# Menyiapkan berbagai dataframe
+hour_df = hour_df_raw[
+    (hour_df_raw["dteday"] >= pd.to_datetime(start_date)) &
+    (hour_df_raw["dteday"] <= pd.to_datetime(end_date))
+]
+
+# Dataframe siap pakai
 daily_rent_df = create_daily_rent_df(main_df)
-sum_order_items_df = create_sum_order_items_df(main_df)
 byseason_df = create_byseason_df(main_df)
+byweather_df = create_byweather_df(main_df)
+hourly_pattern_df = create_hourly_pattern_df(hour_df)
 
-# Header
-st.header('Bike Sharing Dashboard 🚲')
+# --- HEADER ---
+st.title("📊 Bike Sharing Data Analysis Dashboard")
 
-# Metrik Utama
+# --- METRICS ---
 col1, col2, col3 = st.columns(3)
+col1.metric("Total Penyewaan", f"{main_df.cnt.sum():,}")
+col2.metric("Casual Users", f"{main_df.casual.sum():,}")
+col3.metric("Registered Users", f"{main_df.registered.sum():,}")
+
+st.markdown("---")
+
+# =========================================================
+# 📈 VISUAL 1: MUSIM & CUACA
+# =========================================================
+st.header("🌦️ Pengaruh Musim & Cuaca")
+
+col1, col2 = st.columns(2)
 
 with col1:
-    total_rent = main_df.cnt.sum()
-    st.metric("Total Penyewaan", value=total_rent)
+    fig, ax = plt.subplots()
+    sns.barplot(x="season", y="cnt", data=main_df, palette="viridis", ax=ax)
+    ax.set_title("Rata-rata Penyewaan per Musim")
+    st.pyplot(fig)
 
 with col2:
-    total_casual = main_df.casual.sum()
-    st.metric("Pengguna Casual", value=total_casual)
+    fig, ax = plt.subplots()
+    sns.barplot(x="weathersit", y="cnt", data=main_df, palette="coolwarm", ax=ax)
+    ax.set_title("Rata-rata Penyewaan berdasarkan Cuaca")
+    plt.xticks(rotation=30)
+    st.pyplot(fig)
 
-with col3:
-    total_registered = main_df.registered.sum()
-    st.metric("Pengguna Terdaftar", value=total_registered)
+# INSIGHT
+st.markdown("""
+### 📌 Insight
+- **Fall & Summer** memiliki penyewaan tertinggi → cuaca ideal untuk bersepeda  
+- **Spring terendah** → kemungkinan cuaca transisi  
+- Cuaca **cerah (Clear)** sangat meningkatkan penyewaan  
+- Cuaca buruk (hujan/salju) menurunkan minat secara drastis  
 
-# Visualisasi 1: Performa Penyewaan Harian
-st.subheader('Daily Rentals')
-fig, ax = plt.subplots(figsize=(16, 8))
-ax.plot(
-    daily_rent_df["dteday"],
-    daily_rent_df["cnt"],
-    marker='o', 
-    linewidth=2,
-    color="#90CAF9"
+💡 **Strategi:** Fokus armada di musim ramai & cuaca cerah
+""")
+
+st.markdown("---")
+
+# =========================================================
+# 📈 VISUAL 2: TREND BULANAN
+# =========================================================
+st.header("📈 Tren Penyewaan Tahunan")
+
+main_df['year'] = main_df['dteday'].dt.year
+main_df['month'] = main_df['dteday'].dt.month
+
+monthly = main_df.groupby(["year", "month"])["cnt"].mean().reset_index()
+
+fig, ax = plt.subplots(figsize=(12,5))
+sns.lineplot(data=monthly, x="month", y="cnt", hue="year", marker="o", ax=ax)
+ax.set_title("Tren Penyewaan (2011 vs 2012)")
+st.pyplot(fig)
+
+# INSIGHT
+st.markdown("""
+### 📌 Insight
+- Tahun **2012 jauh lebih tinggi** dari 2011 → pertumbuhan signifikan  
+- Pola musiman:
+  - Naik: Maret  
+  - Puncak: Juni–September  
+  - Turun: Akhir tahun  
+
+💡 **Strategi:** Siapkan armada sebelum mid-year peak
+""")
+
+st.markdown("---")
+
+# =========================================================
+# 📈 VISUAL 3: WORKING DAY VS HOLIDAY
+# =========================================================
+st.header("📦 Distribusi Hari Kerja vs Libur")
+
+fig, ax = plt.subplots()
+sns.boxplot(x="workingday", y="cnt", data=main_df, palette="pastel", ax=ax)
+ax.set_xticklabels(["Holiday/Weekend", "Working Day"])
+st.pyplot(fig)
+
+st.markdown("""
+### 📌 Insight
+- Hari kerja memiliki **median lebih tinggi**
+- Lebih stabil dibanding hari libur  
+
+💡 **Artinya:** penggunaan didominasi aktivitas komuter
+""")
+
+st.markdown("---")
+
+# =========================================================
+# 📈 VISUAL 4: POLA JAM (BIMODAL)
+# =========================================================
+st.header("⏰ Pola Penyewaan per Jam")
+
+fig, ax = plt.subplots(figsize=(12,6))
+sns.lineplot(
+    data=hourly_pattern_df,
+    x="hr",
+    y="cnt",
+    hue="workingday",
+    marker="o",
+    ax=ax
 )
-ax.tick_params(axis='y', labelsize=20)
-ax.tick_params(axis='x', labelsize=15)
+
+ax.set_xticks(range(24))
+ax.set_xlabel("Jam")
+ax.set_ylabel("Rata-rata Penyewaan")
+ax.legend(labels=["Holiday/Weekend", "Working Day"])
 st.pyplot(fig)
 
-# Visualisasi 2: Musim & Cuaca
-st.subheader('Penyewaan Berdasarkan Kondisi Lingkungan')
-fig, ax = plt.subplots(nrows=1, ncols=2, figsize=(35, 15))
+# INSIGHT
+st.markdown("""
+### 📌 Insight
+- **Hari kerja → bimodal (08:00 & 17:00)** → pola komuter  
+- **Hari libur → satu puncak siang (12–15)** → rekreasi  
+- Siang weekend > weekday → potensi market leisure  
 
-colors = ["#90CAF9", "#D3D3D3", "#D3D3D3", "#D3D3D3"]
+💡 **Strategi:**
+- Pagi: fokus area pemukiman  
+- Sore: fokus area kantor  
+- Siang weekend: boost promosi 🚀
+""")
 
-sns.barplot(x="cnt", y="season", data=byseason_df.sort_values(by="cnt", ascending=False), palette=colors, ax=ax[0])
-ax[0].set_ylabel(None)
-ax[0].set_xlabel("Jumlah Penyewaan", fontsize=30)
-ax[0].set_title("Berdasarkan Musim", loc="center", fontsize=50)
-ax[0].tick_params(axis='y', labelsize=35)
-ax[0].tick_params(axis='x', labelsize=30)
+st.markdown("---")
 
-sns.barplot(x="cnt", y="weathersit", data=sum_order_items_df, palette=colors, ax=ax[1])
-ax[1].set_ylabel(None)
-ax[1].set_xlabel("Jumlah Penyewaan", fontsize=30)
-ax[1].invert_xaxis()
-ax[1].yaxis.set_label_position("right")
-ax[1].yaxis.tick_right()
-ax[1].set_title("Berdasarkan Kondisi Cuaca", loc="center", fontsize=50)
-ax[1].tick_params(axis='y', labelsize=35)
-ax[1].tick_params(axis='x', labelsize=30)
-
-st.pyplot(fig)
-
-# Footer
-st.caption('Muhammad Adil Imamul Haq Mubarak || Belajar Fundamental Analisis Data 2026')
+# FOOTER
+st.caption("🚀 Muhammad Adil Imamul Haq Mubarak | Submission Dicoding 2026")
